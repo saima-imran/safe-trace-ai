@@ -28,7 +28,7 @@ test_cases:
       response_time_ms: measured
     expected_result: >
       The seat-belt warning shall become active within 500 ms
-      after the activation conditions are satisfied.  
+      after the activation conditions are satisfied.
 
   - id: TC-003
     title: Verify unavailable belt-status signal handling
@@ -40,9 +40,9 @@ test_cases:
     inputs:
       driver_seat_belt_signal: unavailable
     expected_result: >
-      The system shall report a seat-belt status fault.  
+      The system shall report a seat-belt status fault.
 
-    - id: TC-004
+  - id: TC-004
     title: Verify seat-belt warning deactivation
     verifies: SSR-004
     status: approved
@@ -54,7 +54,7 @@ test_cases:
     expected_result: >
       The system shall deactivate the seat-belt warning.
 
-    - id: TC-005
+  - id: TC-005
     title: Verify visual warning indication
     verifies: SSR-005
     status: approved
@@ -62,9 +62,9 @@ test_cases:
       - Warning function is operational.
       - Seat-belt warning is active.
     expected_result: >
-      The system shall provide a visual warning indication to the driver. 
+      The system shall provide a visual warning indication to the driver.
 
-    - id: TC-006
+  - id: TC-006
     title: Verify warning state after system restart
     verifies: SSR-006
     status: approved
@@ -76,6 +76,4 @@ test_cases:
       - Allow the warning function to evaluate the current input signals.
     expected_result: >
       The system shall determine the seat-belt warning state using the
-      current seat occupancy, seat-belt status, and vehicle speed inputs.         
-
-      
+      current seat occupancy, seat-belt status, and vehicle speed inputs.
