@@ -1,0 +1,12 @@
+requirements:
+  - id: SSR-001
+    type: software_safety_requirement
+    title: Seat-belt warning activation
+    version: "1.0"
+    status: approved
+    text: >
+      When the driver seat is occupied, the driver seat belt is not fastened,
+      and vehicle speed exceeds 10 km/h, the system shall activate the
+      seat-belt warning.
+
+      
