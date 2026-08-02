@@ -1,0 +1,65 @@
+requirements:
+  - id: SSR-001
+    type: software_safety_requirement
+    title: Seat-belt warning activation
+    version: "2.0"
+    status: approved
+    text: >
+      When the driver seat is occupied, the driver seat belt is not fastened,
+      and vehicle speed exceeds 5 km/h, the system shall activate the
+      seat-belt warning.
+
+  - id: SSR-002
+    type: software_safety_requirement
+    title: Seat-belt warning activation time
+    version: "2.0"
+    status: approved
+    text: >
+      When the seat-belt warning activation conditions are satisfied,
+      the system shall activate the seat-belt warning within 200 ms.    
+
+  - id: SSR-003
+    type: software_safety_requirement
+    title: Invalid belt-status handling
+    version: "2.0"
+    status: approved
+    text: >
+      If the driver seat-belt status signal is unavailable or implausible,
+      the system shall report a seat-belt status fault and store a
+      diagnostic event.
+  - id: SSR-004
+    type: software_safety_requirement
+    title: Seat-belt warning deactivation
+    version: "2.0"
+    status: approved
+    text: >
+      When the driver seat belt is fastened and the belt-status signal is valid,
+      the system shall deactivate the seat-belt warning.  
+  - id: SSR-005
+    type: software_safety_requirement
+    title: Warning indication
+    version: "1.0"
+    status: approved
+    text: >
+      When the seat-belt warning is active,
+      the system shall provide a visual warning indication to the driver.
+
+  - id: SSR-006
+    type: software_safety_requirement
+    title: Warning state after system restart
+    version: "1.0"
+    status: approved
+    text: >
+      After a system restart, the system shall determine the seat-belt
+      warning state using the current seat occupancy, seat-belt status,
+      and vehicle speed inputs. 
+
+
+
+
+
+
+
+
+      
+        
