@@ -1,0 +1,60 @@
+test_results:
+  - id: TR-001
+    test_case: TC-001
+    requirement_version: "1.0"
+    execution_status: completed
+    actual_result: >
+      The seat-belt warning became active when the defined
+      activation conditions were applied.
+    verdict: pass
+    -----------------------------------------
+    - id: TR-002
+    test_case: TC-002
+    requirement_version: "1.0"
+    execution_status: completed
+    measurements:
+      response_time_ms: 420
+    actual_result: >
+      The seat-belt warning became active 420 ms after
+      the activation conditions were applied.
+    verdict: pass
+    -------------------------------------------
+    - id: TR-003
+    test_case: TC-003
+    requirement_version: "1.0"
+    execution_status: completed
+    actual_result: >
+      The system reported a seat-belt status fault when the
+      driver seat-belt status signal was unavailable.
+    verdict: pass
+    -----------------------------------
+    - id: TR-004
+    test_case: TC-004
+    requirement_version: "1.0"
+    execution_status: completed
+    actual_result: >
+      The seat-belt warning was deactivated when the
+      driver seat belt was fastened.
+    verdict: pass 
+    ---------------------------------------------------   
+  - id: TR-005
+    test_case: TC-005
+    requirement_version: "1.0"
+    execution_status: completed
+    actual_result: >
+      A visual warning indication was presented to the driver
+      while the seat-belt warning was active.
+    verdict: pass
+    ------------------
+
+  - id: TR-006
+    test_case: TC-006
+    requirement_version: "1.0"
+    execution_status: completed
+    actual_result: >
+      After the system restart, the seat-belt warning state was
+      determined using the current seat occupancy, seat-belt status,
+      and vehicle speed inputs.
+    verdict: pass    
+
+    
