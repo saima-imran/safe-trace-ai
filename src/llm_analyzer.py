@@ -1,139 +1,158 @@
 """
-llm_analyzer.py
+Generate advisory LLM explanations for deterministic SafeTrace-AI findings.
 
-Purpose
--------
-This module communicates with the local Ollama model to generate a
-human-readable engineering explanation for a requirement change.
-
-IMPORTANT:
-The LLM DOES NOT make engineering decisions.
-
-Python already determines:
-    - which requirement changed
-    - evidence status
-    - deterministic reasoning
-
-The LLM only explains those facts.
+The LLM explains verified engineering facts supplied by the deterministic
+pipeline. It does not determine evidence status, compliance, certification,
+safety acceptance, or hazard classification.
 """
 
 from typing import Any
 
 import requests
 
-# -------------------------------------------------------------------
-# Ollama Configuration
-# -------------------------------------------------------------------
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL_NAME = "llama3.2:3b"
 
-
-# -------------------------------------------------------------------
-# Prompt Builder
-# -------------------------------------------------------------------
 
 def build_prompt(
     old_requirement: str,
     new_requirement: str,
     evidence_status: str,
     deterministic_reason: str,
+    test_case_ids: list[str],
+    test_result_ids: list[str],
 ) -> str:
-    """
-    Create a constrained prompt for Ollama.
+    """Build a grounded prompt for requirement change-impact explanation."""
 
-    The prompt supplies verified engineering facts and instructs the
-    model to explain the change without inventing new information.
-    """
+    test_cases_text = ", ".join(test_case_ids) or "None"
+    test_results_text = ", ".join(test_result_ids) or "None"
 
     return f"""
-You are assisting a software safety engineer.
+You are assisting a software requirements and verification engineer.
 
-Your role is ONLY to explain the engineering implications of the
-requirement change.
+Your role is limited to explaining verified information supplied by
+SafeTrace-AI.
 
-You MUST NOT change or reinterpret the deterministic findings.
+Do not make additional engineering, safety, compliance, or certification
+judgements.
 
-------------------------------------------------------------
-Old Requirement
-------------------------------------------------------------
+======================================================================
+VERIFIED INPUT
+======================================================================
 
+OLD REQUIREMENT
 {old_requirement}
 
-------------------------------------------------------------
-New Requirement
-------------------------------------------------------------
-
+NEW REQUIREMENT
 {new_requirement}
 
-------------------------------------------------------------
-Deterministic Evidence Status
-------------------------------------------------------------
-
+DETERMINISTIC EVIDENCE STATUS
 {evidence_status}
 
-------------------------------------------------------------
-Deterministic Reason
-------------------------------------------------------------
-
+DETERMINISTIC REASON
 {deterministic_reason}
 
-------------------------------------------------------------
-Verified Facts
-------------------------------------------------------------
+LINKED TEST CASES
+{test_cases_text}
 
-- The previous maximum response time requirement was 500 ms.
+LINKED TEST RESULTS
+{test_results_text}
 
-- The updated maximum response time requirement is 200 ms.
+======================================================================
+YOUR TASK
+======================================================================
 
-- The previous measured response time was 420 ms.
+Compare the old and new requirement and explain:
 
-- 420 ms satisfied the previous 500 ms requirement.
+1. What explicitly changed in the requirement text.
 
-- 420 ms DOES NOT satisfy the updated 200 ms requirement.
+2. Which explicit conditions, thresholds, constraints, or required
+   behaviours were added, removed, expanded, or made stricter.
 
-------------------------------------------------------------
-Your Task
-------------------------------------------------------------
+3. Why the supplied linked verification evidence may need review.
 
-Explain:
+4. What an engineer should inspect or verify next.
 
-1. What changed.
+======================================================================
+STRICT GROUNDING RULES
+======================================================================
 
-2. Why the existing verification evidence is affected.
+- Treat the deterministic status as authoritative.
 
-3. Why re-verification is recommended.
+- Treat the deterministic reason as authoritative.
 
-------------------------------------------------------------
-Rules
-------------------------------------------------------------
+- Preserve logical operators exactly.
+  For example:
+  "A OR B" must never be rewritten as "A AND B".
 
-- Preserve every verified fact exactly.
+- Preserve numeric values exactly as supplied.
 
-- Never state that 420 ms failed the previous
-  500 ms requirement.
+- Preserve requirement meaning exactly as supplied.
 
-- Explain that 420 ms PASSED Version 1.
+- Do not infer the designer's intention.
 
-- Explain that 420 ms DOES NOT satisfy Version 2.
+- Do not infer benefits such as:
+  "safer",
+  "more vigilant",
+  "better",
+  "improved safety",
+  or similar claims unless explicitly provided.
 
-- Never change the deterministic evidence status.
+- Do not invent requirements.
 
-- Never invent requirements.
+- Do not invent test cases.
 
-- Never invent measurements.
+- Do not invent test results.
 
-- Never invent regulations.
+- Do not invent measurements.
 
-- Never claim ISO 26262 compliance.
+- Do not invent traceability links.
 
-- Never claim certification.
+- Do not invent regulations.
 
-- Treat your answer as engineering guidance.
+- Do not claim ISO 26262 compliance or non-compliance.
 
-------------------------------------------------------------
-Output Format
-------------------------------------------------------------
+- Do not use phrases such as:
+  "ensure compliance",
+  "prove compliance",
+  or "certify compliance".
+
+- Do not claim certification.
+
+- Do not perform hazard analysis.
+
+- Do not assign a safety risk.
+
+- Do not claim that an earlier test failed unless the supplied
+  deterministic evidence explicitly states this.
+
+- Do not state that an existing test still passes the updated
+  requirement unless the deterministic evidence explicitly proves it.
+
+- Clearly distinguish between:
+  a requirement change,
+  existing evidence,
+  and a suggested future review.
+
+- Mention every clearly identifiable added condition or behaviour.
+
+- Recommendations must use cautious language such as:
+  "review",
+  "verify",
+  "inspect",
+  "consider extending the test",
+  or "determine whether additional verification is required".
+
+- Treat the response as advisory and subject to human engineering review.
+
+- Keep the response concise.
+
+======================================================================
+OUTPUT FORMAT
+======================================================================
+
+Use exactly these four headings:
 
 Change Type:
 
@@ -145,21 +164,15 @@ Suggested Review:
 """.strip()
 
 
-# -------------------------------------------------------------------
-# Ollama Communication
-# -------------------------------------------------------------------
-
 def generate_explanation(prompt: str) -> str:
-    """
-    Send the prompt to Ollama and return the explanation.
-    """
+    """Send a prompt to Ollama and return the generated explanation."""
 
     payload: dict[str, Any] = {
         "model": MODEL_NAME,
         "prompt": prompt,
         "stream": False,
         "options": {
-            "temperature": 0.2,
+            "temperature": 0.1,
         },
     }
 
@@ -173,13 +186,10 @@ def generate_explanation(prompt: str) -> str:
         response.raise_for_status()
 
     except requests.RequestException as exc:
-
         raise RuntimeError(
-            "Unable to communicate with Ollama.\n"
-            "Check that:\n"
-            "1. Ollama is running.\n"
-            "2. llama3.2:3b is installed.\n"
-            "3. The Ollama API is reachable."
+            "Could not obtain an explanation from Ollama. "
+            "Check that Ollama is running and that "
+            f"the model '{MODEL_NAME}' is installed."
         ) from exc
 
     response_data = response.json()
@@ -190,7 +200,6 @@ def generate_explanation(prompt: str) -> str:
     ).strip()
 
     if not explanation:
-
         raise RuntimeError(
             "Ollama returned an empty response."
         )
@@ -198,47 +207,38 @@ def generate_explanation(prompt: str) -> str:
     return explanation
 
 
-# -------------------------------------------------------------------
-# Example
-# -------------------------------------------------------------------
-
 if __name__ == "__main__":
-
     old_requirement = (
-        "When the seat-belt warning activation conditions "
-        "are satisfied, the system shall activate the "
-        "seat-belt warning within 500 ms."
+        "If the driver seat-belt status signal is unavailable, "
+        "the system shall report a seat-belt status fault."
     )
 
     new_requirement = (
-        "When the seat-belt warning activation conditions "
-        "are satisfied, the system shall activate the "
-        "seat-belt warning within 200 ms."
-    )
-
-    evidence_status = "RE_VERIFICATION_REQUIRED"
-
-    deterministic_reason = (
-        "Previous measured response time was 420 ms, "
-        "which exceeds the updated 200 ms requirement."
+        "If the driver seat-belt status signal is unavailable or implausible, "
+        "the system shall report a seat-belt status fault and store a "
+        "diagnostic event."
     )
 
     prompt = build_prompt(
-        old_requirement,
-        new_requirement,
-        evidence_status,
-        deterministic_reason,
+        old_requirement=old_requirement,
+        new_requirement=new_requirement,
+        evidence_status="REVIEW_REQUIRED",
+        deterministic_reason=(
+            "The requirement changed and its linked verification "
+            "evidence should be reviewed."
+        ),
+        test_case_ids=["TC-003"],
+        test_result_ids=["TR-003"],
     )
 
-    explanation = generate_explanation(prompt)
+    explanation = generate_explanation(
+        prompt
+    )
 
-    print("\n")
+    print()
     print("=" * 70)
-    print("LLM ENGINEERING EXPLANATION")
+    print("LLM ADVISORY EXPLANATION")
     print("=" * 70)
     print(explanation)
     print("=" * 70)
-
     
-
-

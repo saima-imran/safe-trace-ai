@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 import requests
 
+# Allow imports from the src directory
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from llm_analyzer import build_prompt, generate_explanation
@@ -25,13 +26,17 @@ def test_build_prompt_contains_verified_facts() -> None:
             "The previous measured response time was 420 ms, "
             "which exceeds the updated 200 ms requirement."
         ),
+        test_case_ids=["TC-002"],
+        test_result_ids=["TR-002"],
     )
 
     assert "500 ms" in prompt
     assert "200 ms" in prompt
     assert "420 ms" in prompt
     assert "RE_VERIFICATION_REQUIRED" in prompt
-    assert "Never claim ISO 26262 compliance" in prompt
+    assert "TC-002" in prompt
+    assert "TR-002" in prompt
+    assert "ISO 26262" in prompt
 
 
 def test_generate_explanation_returns_ollama_response(
@@ -55,6 +60,7 @@ def test_generate_explanation_returns_ollama_response(
         json: dict,
         timeout: int,
     ) -> Mock:
+
         assert url == "http://localhost:11434/api/generate"
         assert json["model"] == "llama3.2:3b"
         assert json["stream"] is False
@@ -92,4 +98,4 @@ def test_generate_explanation_rejects_empty_response(
     ):
         generate_explanation("Example prompt")
 
-        
+         
