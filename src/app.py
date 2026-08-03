@@ -6,6 +6,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parents[0]))
 
 from main import run_analysis
+from report_generator import build_text_report
 
 
 st.set_page_config(
@@ -49,6 +50,10 @@ if run_button:
             use_llm=use_llm,
         )
 
+        report_text = build_text_report(
+            results
+        )
+
     st.success(
         f"Analysis complete. "
         f"{len(results)} changed requirements found."
@@ -89,7 +94,9 @@ if run_button:
             result["reason"]
         )
 
-        st.markdown("### Affected Verification Evidence")
+        st.markdown(
+            "### Affected Verification Evidence"
+        )
 
         evidence_col_1, evidence_col_2 = st.columns(2)
 
@@ -117,7 +124,9 @@ if run_button:
             else:
                 st.write("None")
 
-        st.markdown("### LLM Advisory Explanation")
+        st.markdown(
+            "### LLM Advisory Explanation"
+        )
 
         if result["llm_explanation"]:
             st.write(
@@ -133,4 +142,15 @@ if run_button:
             "require human engineering review."
         )
 
-        
+    st.divider()
+
+    st.subheader("Download Report")
+
+    st.download_button(
+        label="Download Analysis Report",
+        data=report_text,
+        file_name="safetrace_ai_analysis_report.txt",
+        mime="text/plain",
+    )
+
+    
