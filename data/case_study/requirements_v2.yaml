@@ -16,7 +16,10 @@ requirements:
     status: approved
     text: >
       When the seat-belt warning activation conditions are satisfied,
-      the system shall activate the seat-belt warning within 200 ms.    
+      the system shall activate the seat-belt warning within 200 ms.
+    constraint:
+      type: timing
+      max_response_time_ms: 200    
 
   - id: SSR-003
     type: software_safety_requirement
@@ -54,6 +57,7 @@ requirements:
       warning state using the current seat occupancy, seat-belt status,
       and vehicle speed inputs. 
 
+      
 
 
 
