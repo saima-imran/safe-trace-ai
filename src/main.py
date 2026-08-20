@@ -2,6 +2,11 @@ from pathlib import Path
 
 from data_loader import load_yaml
 from evidence_assessor import assess_evidence
+from governance_authorization import evaluate_ai_authorization
+from governance_policy import (
+    find_policy_for_activity,
+    load_governance_policies,
+)
 from impact_analyzer import analyze_impacts
 from llm_analyzer import build_prompt, generate_explanation
 
@@ -41,13 +46,42 @@ def collect_evidence_ids(
 
 def run_analysis(
     use_llm: bool = True,
+    reviewer_role: str | None = None,
+    authorization_granted: bool = False,
 ) -> list[dict]:
     """
     Run the SafeTrace-AI analysis pipeline.
 
+    Governance policy is evaluated before any LLM call. The LLM can run
+    only when the applicable policy and authorization permit execution.
+
     Returns structured analysis results that can be reused by
     the terminal application, Streamlit UI, or report generator.
     """
+
+    policies = load_governance_policies()
+
+    explanation_policy = find_policy_for_activity(
+        "explain_safety_requirement_impact",
+        policies,
+    )
+
+    if use_llm:
+        authorization = evaluate_ai_authorization(
+            explanation_policy,
+            reviewer_role=reviewer_role,
+            authorization_granted=authorization_granted,
+        )
+    else:
+        authorization = {
+            "policy_id": explanation_policy["id"],
+            "status": "AI_NOT_REQUESTED",
+            "ai_execution_allowed": False,
+            "reviewer_role": reviewer_role,
+            "reason": (
+                "AI assistance was disabled for this analysis run."
+            ),
+        }
 
     requirements_v1_data = load_yaml(
         Path("data/case_study/requirements_v1.yaml")
@@ -103,7 +137,10 @@ def run_analysis(
 
         llm_explanation = None
 
-        if use_llm:
+        if (
+            use_llm
+            and authorization["ai_execution_allowed"]
+        ):
             prompt = build_prompt(
                 old_requirement=old_requirement["text"],
                 new_requirement=new_requirement["text"],
@@ -135,6 +172,13 @@ def run_analysis(
                 "test_case_ids": test_case_ids,
                 "test_result_ids": test_result_ids,
                 "llm_explanation": llm_explanation,
+                "policy_id": authorization["policy_id"],
+                "governance_status": authorization["status"],
+                "governance_reason": authorization["reason"],
+                "reviewer_role": authorization["reviewer_role"],
+                "ai_execution_allowed": authorization[
+                    "ai_execution_allowed"
+                ],
             }
         )
 
@@ -193,12 +237,27 @@ def print_analysis(
             )
         )
 
+        print("\nGOVERNANCE POLICY:")
+        print(result["policy_id"])
+
+        print("\nGOVERNANCE STATUS:")
+        print(result["governance_status"])
+
+        print("\nGOVERNANCE REASON:")
+        print(result["governance_reason"])
+
+        print("\nAI EXECUTION ALLOWED:")
+        print(result["ai_execution_allowed"])
+
         print("\nLLM ADVISORY EXPLANATION:")
 
         if result["llm_explanation"]:
             print(result["llm_explanation"])
         else:
-            print("LLM analysis disabled.")
+            print(
+                "No LLM explanation was generated because AI was "
+                "disabled or governance authorization was not granted."
+            )
 
     print()
     print("=" * 80)
@@ -208,11 +267,10 @@ def print_analysis(
 
 if __name__ == "__main__":
     results = run_analysis(
-        use_llm=True,
+        use_llm=False,
     )
 
     print_analysis(
         results
     )
-
     

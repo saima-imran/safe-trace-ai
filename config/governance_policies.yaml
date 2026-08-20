@@ -1,0 +1,31 @@
+policies:
+  - id: POL-AI-001
+    version: "1.0"
+    activity: summarize_low_consequence_change
+    decision: AI_PERMITTED
+    reason: >
+      AI may provide a non-authoritative summary when the activity has
+      no direct safety or compliance consequence.
+    allowed_roles:
+      - requirements_engineer
+
+  - id: POL-AI-002
+    version: "1.0"
+    activity: explain_safety_requirement_impact
+    decision: HUMAN_AUTHORIZATION_REQUIRED
+    reason: >
+      AI may provide an advisory explanation only after an authorized
+      engineer permits its use for the safety-related requirement.
+    allowed_roles:
+      - requirements_engineer
+      - verification_engineer
+      - safety_engineer
+
+  - id: POL-AI-003
+    version: "1.0"
+    activity: modify_authoritative_trace_link
+    decision: AI_RESTRICTED
+    reason: >
+      AI must not create, modify, approve, or remove an authoritative
+      traceability link.
+    allowed_roles: []
