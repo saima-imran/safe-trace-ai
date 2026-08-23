@@ -345,38 +345,38 @@ The application is a Streamlit multipage interface.
 
 ```text
 safe-trace-ai/
-â”œâ”€â”€ config/
-â”‚   â””â”€â”€ governance_policies.yaml
-â”œâ”€â”€ data/
-â”‚   â””â”€â”€ case_study/
-â”‚       â”œâ”€â”€ requirements_v1.yaml
-â”‚       â”œâ”€â”€ requirements_v2.yaml
-â”‚       â”œâ”€â”€ test_cases.yaml
-â”‚       â””â”€â”€ test_results.yaml
-â”œâ”€â”€ src/
-â”‚   â”œâ”€â”€ pages/
-â”‚   â”‚   â””â”€â”€ 1_Governance.py
-â”‚   â”œâ”€â”€ app.py
-â”‚   â”œâ”€â”€ change_detector.py
-â”‚   â”œâ”€â”€ data_loader.py
-â”‚   â”œâ”€â”€ evidence_assessor.py
-â”‚   â”œâ”€â”€ governance_authorization.py
-â”‚   â”œâ”€â”€ governance_policy.py
-â”‚   â”œâ”€â”€ impact_analyzer.py
-â”‚   â”œâ”€â”€ llm_analyzer.py
-â”‚   â”œâ”€â”€ main.py
-â”‚   â”œâ”€â”€ report_generator.py
-â”‚   â””â”€â”€ traceability.py
-â”œâ”€â”€ tests/
-â”‚   â”œâ”€â”€ test_change_detector.py
-â”‚   â”œâ”€â”€ test_evidence_assessor.py
-â”‚   â”œâ”€â”€ test_governance_authorization.py
-â”‚   â”œâ”€â”€ test_governance_policy.py
-â”‚   â”œâ”€â”€ test_governed_analysis.py
-â”‚   â”œâ”€â”€ test_llm_analyzer.py
-â”‚   â””â”€â”€ test_traceability.py
-â”œâ”€â”€ requirements.txt
-â””â”€â”€ README.md
++-- config/
+|   +-- governance_policies.yaml
++-- data/
+|   +-- case_study/
+|       +-- requirements_v1.yaml
+|       +-- requirements_v2.yaml
+|       +-- test_cases.yaml
+|       +-- test_results.yaml
++-- src/
+|   +-- pages/
+|   |   +-- 1_Governance.py
+|   +-- app.py
+|   +-- change_detector.py
+|   +-- data_loader.py
+|   +-- evidence_assessor.py
+|   +-- governance_authorization.py
+|   +-- governance_policy.py
+|   +-- impact_analyzer.py
+|   +-- llm_analyzer.py
+|   +-- main.py
+|   +-- report_generator.py
+|   +-- traceability.py
++-- tests/
+|   +-- test_change_detector.py
+|   +-- test_evidence_assessor.py
+|   +-- test_governance_authorization.py
+|   +-- test_governance_policy.py
+|   +-- test_governed_analysis.py
+|   +-- test_llm_analyzer.py
+|   +-- test_traceability.py
++-- requirements.txt
++-- README.md
 ```
 
 ## 13. Installation
@@ -509,12 +509,12 @@ flowchart LR
 
 Planned capabilities include:
 
-1. **Persistent accountability log** â€” record policy ID and version, role, decision, authorization, model, timestamps, input references, and justification.
-2. **Human review workflow** â€” record approve, reject, or escalate decisions with reviewer responsibility.
-3. **Deterministic output validator** â€” detect changed numbers, altered logical operators, unsupported claims, invented evidence, and prohibited compliance language.
-4. **Proposed versus trusted state** â€” keep AI suggestions separate from approved engineering artifacts.
-5. **Recovery demonstrator** â€” inject a faulty advisory output, identify affected downstream artifacts, restore the last trusted state, and document re-review.
-6. **Empirical evaluation** â€” evaluate usefulness, false claims, authorization burden, accountability completeness, and recovery effectiveness with practitioners.
+1. **Persistent accountability log** -- record policy ID and version, role, decision, authorization, model, timestamps, input references, and justification.
+2. **Human review workflow** -- record approve, reject, or escalate decisions with reviewer responsibility.
+3. **Deterministic output validator** -- detect changed numbers, altered logical operators, unsupported claims, invented evidence, and prohibited compliance language.
+4. **Proposed versus trusted state** -- keep AI suggestions separate from approved engineering artifacts.
+5. **Recovery demonstrator** -- inject a faulty advisory output, identify affected downstream artifacts, restore the last trusted state, and document re-review.
+6. **Empirical evaluation** -- evaluate usefulness, false claims, authorization burden, accountability completeness, and recovery effectiveness with practitioners.
 
 ## 19. Research scope
 
