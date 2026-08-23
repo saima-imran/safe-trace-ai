@@ -1,746 +1,761 @@
-# SafeTrace-AI
+SafeTrace-AI
 
-SafeTrace-AI is a research prototype for **AI-assisted requirement change-impact analysis and verification evidence review**.
+Deterministic change-impact analysis with policy-governed, advisory AI assistance for requirements traceability and verification evidence.
 
-The project combines a deterministic Python pipeline with a locally hosted Large Language Model (LLM) to analyze changes between requirement versions, identify affected verification evidence, and generate advisory engineering explanations.
+SafeTrace-AI is a research prototype that compares versions of safety-related software requirements, resolves links to verification artifacts, evaluates existing evidence using deterministic rules, and optionally asks a local Large Language Model (LLM) to explain the verified findings.
 
-The fundamental design principle is:
+The prototype also includes a deterministic governance layer that decides whether an AI-assisted activity is permitted, requires explicit human authorization, or is restricted.
 
-> **Deterministic logic determines engineering facts. The LLM explains those facts but does not make the engineering decision.**
+Core assurance principle: Deterministic logic establishes engineering facts and governs whether AI may participate. The LLM may explain authorized facts, but it does not determine verification status, modify authoritative trace links, approve compliance, or certify safety.
 
----
+Contents
 
-## 1. Project Motivation
+1. Motivation
 
-Safety-related software requirements evolve during development.
+2. System scope
 
-When a requirement changes, engineers need to understand:
+3. Design principles
 
-- What changed?
-- Which test cases are linked to the requirement?
-- Which test results may be affected?
-- Is existing verification evidence still relevant?
-- Is re-verification required?
-- How can the change be explained clearly to an engineer?
+4. System context
 
-SafeTrace-AI explores how deterministic analysis and a local LLM can be combined to support this workflow.
+5. Architecture
 
-The prototype uses a seat-belt warning system as its engineering case study.
+6. Deterministic analysis pipeline
 
----
+7. AI governance layer
 
-## 2. System Architecture
+8. Human authorization
 
-SafeTrace-AI separates deterministic engineering analysis from generative AI explanation.
+9. Advisory LLM layer
 
-```text
-Requirements V1
-      |
-      |
-Requirements V2
-      |
-      v
-+-----------------------+
-|     Data Loader       |
-+-----------------------+
-      |
-      v
-+-----------------------+
-|   Change Detector     |
-+-----------------------+
-      |
-      v
-Changed Requirements
-      |
-      v
-+-----------------------+
-|     Traceability      |
-+-----------------------+
-      |
-      v
-Requirement -> Test Case -> Test Result
-      |
-      v
-+-----------------------+
-|    Impact Analyzer    |
-+-----------------------+
-      |
-      v
-+-----------------------+
-|   Evidence Assessor   |
-+-----------------------+
-      |
-      v
-Deterministic Engineering Finding
-      |
-      v
-+-----------------------+
-|     LLM Analyzer      |
-+-----------------------+
-      |
-      v
-Ollama / llama3.2:3b
-      |
-      v
-Advisory Engineering Explanation
-      |
-      v
-+-----------------------+
-|     Human Review      |
-+-----------------------+
-```
+10. Data model and case study
 
-The deterministic pipeline remains authoritative.
+11. Streamlit interface
 
-The LLM is used only as an advisory explanation layer.
+12. Repository structure
 
----
+13. Installation
 
-## 3. Main Features
+14. Running the project
 
-SafeTrace-AI currently provides:
+15. Testing
 
-- YAML-based engineering data
-- Requirement version comparison
-- Requirement change detection
-- Requirement-to-test traceability
-- Test-result traceability
-- Verification impact analysis
-- Deterministic evidence assessment
-- Local LLM integration using Ollama
-- Grounded engineering explanation prompts
-- Streamlit user interface
-- Automated testing using pytest
-- Separation between deterministic decisions and AI-generated explanations
+16. Demonstration scenarios
 
----
+17. Current limitations
 
-## 4. Requirement Versioning
+18. Accountability and recovery roadmap
 
-The case study contains two versions of the same requirement set:
+19. Research scope
 
-```text
-requirements_v1.yaml
-requirements_v2.yaml
-```
+20. Disclaimer
 
-These represent different revisions of the same requirements.
+1. Motivation
 
-SafeTrace-AI compares the two versions and classifies each requirement as:
+When a software requirement changes, engineers must determine:
 
-```text
+What changed between the two versions?
+
+Which test cases verify the requirement?
+
+Which historical test results are connected to those test cases?
+
+Does the existing evidence still address the updated requirement?
+
+Is engineering review or re-verification required?
+
+Where may generative AI assist without becoming an engineering authority?
+
+Who is allowed to authorize safety-related AI assistance?
+
+Which activities must remain deterministic?
+
+SafeTrace-AI explores these questions through a small, inspectable technical demonstrator based on a seat-belt warning system.
+
+2. System scope
+
+In scope
+
+Load controlled requirements, test cases, and test results from YAML.
+
+Compare two versions of a requirement baseline.
+
+Detect modified, unchanged, added, and removed requirements.
+
+Resolve explicit Requirement -> Test Case -> Test Result links.
+
+Collect verification evidence affected by modified requirements.
+
+Apply deterministic evidence-assessment rules.
+
+Optionally generate a grounded advisory explanation through local Ollama.
+
+Evaluate a machine-readable governance policy before LLM execution.
+
+Require an allowed engineering role and explicit authorization where configured.
+
+Restrict AI from modifying authoritative traceability links.
+
+Present analysis and governance behavior through Streamlit.
+
+Generate a downloadable text analysis report.
+
+Out of scope
+
+ISO 26262 certification or conformity assessment.
+
+Hazard analysis, risk classification, or safety acceptance.
+
+Legal or regulatory compliance determination.
+
+Automatic creation, approval, modification, or removal of authoritative trace links.
+
+Replacement of requirements, verification, safety, or compliance engineers.
+
+Production integration with SystemWeaver or other lifecycle-management platforms.
+
+Persistent organizational identity, accountability logs, trusted-state rollback, and recovery orchestration in the current baseline.
+
+3. Design principles
+
+Principle
+
+Meaning in SafeTrace-AI
+
+Deterministic authority
+
+Python establishes change status, trace links, measurements, and evidence status.
+
+Policy before execution
+
+Governance is evaluated before any LLM request.
+
+Bounded AI assistance
+
+The LLM receives a limited task, verified inputs, and explicit prohibitions.
+
+Human responsibility
+
+Safety-impact explanations require an allowed role and explicit authorization.
+
+No AI at the traceability core
+
+AI cannot create, modify, approve, or remove authoritative trace links.
+
+Fail closed
+
+Unknown activities, unauthorized roles, and restricted activities do not receive AI execution.
+
+Local processing
+
+The configured model runs locally through Ollama.
+
+Research transparency
+
+Implemented controls and planned controls are distinguished explicitly.
+
+4. System context
+
+flowchart LR
+    RE[Requirements engineer] --> ST[SafeTrace-AI]
+    VE[Verification or safety engineer] --> ST
+    ART[Requirements, tests, results] --> ST
+    ST --> FIND[Deterministic findings]
+    ST --> OLL[Local Ollama model]
+    OLL --> ADV[Advisory explanation]
+
+Engineering artifacts are controlled inputs. Deterministic findings remain authoritative. A local LLM can provide an advisory explanation only when the governance decision permits execution.
+
+5. Architecture
+
+flowchart TB
+    UI[Streamlit analysis and governance pages]
+    MAIN[Analysis orchestration]
+    GOV[Governance policy and authorization]
+    DET[Deterministic change, traceability, impact, and evidence analysis]
+    LLM[Advisory LLM adapter]
+    DATA[YAML case-study data]
+    POL[Governance policy YAML]
+    REP[Text report generator]
+
+    UI --> MAIN
+    UI --> GOV
+    MAIN --> DET
+    MAIN --> GOV
+    GOV --> LLM
+    DET --> LLM
+    DATA --> DET
+    POL --> GOV
+    MAIN --> REP
+
+Main components
+
+Component
+
+Responsibility
+
+data_loader.py
+
+Safely loads YAML engineering data.
+
+change_detector.py
+
+Compares requirement baselines by stable ID and normalized text.
+
+traceability.py
+
+Resolves requirement-to-test and test-to-result links.
+
+impact_analyzer.py
+
+Collects evidence connected to modified requirements.
+
+evidence_assessor.py
+
+Applies deterministic evidence rules, currently including timing.
+
+governance_policy.py
+
+Loads, validates, and selects the policy for an activity.
+
+governance_authorization.py
+
+Evaluates roles, explicit authorization, and restricted use.
+
+llm_analyzer.py
+
+Builds a grounded prompt and communicates with Ollama.
+
+main.py
+
+Orchestrates governed analysis and returns structured results.
+
+app.py
+
+Presents analysis results and a downloadable report.
+
+pages/1_Governance.py
+
+Demonstrates policy selection and authorization outcomes.
+
+report_generator.py
+
+Creates a plain-text analysis report.
+
+6. Deterministic analysis pipeline
+
+flowchart LR
+    V[Requirement V1 and V2] --> C[Change detection]
+    C --> T[Traceability resolution]
+    T --> I[Impact analysis]
+    I --> E[Evidence assessment]
+    E --> F[Authoritative finding]
+    F --> G[Governance gate]
+    G -->|Allowed| A[Advisory explanation]
+    G -->|Blocked| B[No AI execution]
+
+Change detection
+
+Whitespace is normalized before comparison. Requirements are indexed by ID and classified as:
+
 modified
-```
 
-or:
-
-```text
 unchanged
-```
 
-The prototype does not treat V1 and V2 as different requirement categories.
+added
 
-They represent different versions of the same engineering baseline.
+removed
 
----
+The current downstream impact pipeline analyzes modified requirements.
 
-## 5. Traceability Model
+Traceability model
 
-SafeTrace-AI follows the relationship:
-
-```text
-Requirement
-    |
-    v
-Test Case
-    |
-    v
-Test Result
-```
+flowchart LR
+    R[Requirement] -->|verified by| TC[Test case]
+    TC -->|executed as| TR[Test result]
 
 For example:
 
-```text
-SSR-002
-   |
-   v
-TC-002
-   |
-   v
-TR-002
-```
+SSR-002 -> TC-002 -> TR-002
 
-This allows a requirement change to be connected to its existing verification evidence.
+The links are read from controlled YAML fields. The LLM does not create or alter them.
 
----
+Deterministic evidence assessment
 
-## 6. Deterministic Evidence Assessment
+The timing example demonstrates why a historical pass verdict cannot automatically be reused after a requirement change:
 
-Engineering decisions are made by deterministic Python logic rather than by the LLM.
+Old maximum response time: 500 ms
+New maximum response time: 200 ms
+Historical measurement:    420 ms
 
-Example:
+The historical result satisfied the old threshold:
 
-### Original requirement
-
-```text
-The seat-belt warning shall activate within 500 ms.
-```
-
-### Updated requirement
-
-```text
-The seat-belt warning shall activate within 200 ms.
-```
-
-### Existing verification result
-
-```text
-Measured response time = 420 ms
-```
-
-For the original requirement:
-
-```text
 420 ms <= 500 ms
-```
 
-The measurement satisfied the previous timing constraint.
+It exceeds the updated threshold:
 
-For the updated requirement:
-
-```text
 420 ms > 200 ms
-```
 
-The existing measurement does not satisfy the updated timing constraint.
+SafeTrace-AI therefore assigns:
 
-SafeTrace-AI therefore produces:
-
-```text
 RE_VERIFICATION_REQUIRED
-```
 
-with the deterministic reason:
+Other modified requirements currently receive REVIEW_REQUIRED unless a specialized deterministic rule produces a stronger finding.
 
-```text
-Previous measured response time was 420 ms,
-which exceeds the new 200 ms requirement.
-```
+7. AI governance layer
 
-The LLM does not determine this status.
+Governance policies are machine-readable and stored in:
 
----
+config/governance_policies.yaml
 
-## 7. Evidence Status
+The current demonstrator defines three policy boundaries:
 
-The current prototype uses deterministic statuses including:
+Policy
 
-### REVIEW_REQUIRED
+Activity
 
-The requirement changed and its linked verification evidence should be reviewed.
+Decision
 
-### RE_VERIFICATION_REQUIRED
+Meaning
 
-Existing deterministic evidence demonstrates that verification needs to be repeated or reconsidered against the updated requirement.
+POL-AI-001
 
-These statuses are generated before the LLM is called.
+Summarize a low-consequence change
 
----
+AI_PERMITTED
 
-## 8. LLM Advisory Layer
+AI may run without additional authorization.
 
-SafeTrace-AI uses a locally hosted LLM through Ollama.
+POL-AI-002
 
-Current model:
+Explain a safety-requirement impact
 
-```text
-llama3.2:3b
-```
+HUMAN_AUTHORIZATION_REQUIRED
 
-The LLM receives verified information from the deterministic pipeline, including:
+An allowed role must explicitly authorize bounded AI assistance.
 
-- old requirement
-- new requirement
-- deterministic evidence status
-- deterministic reason
-- linked test-case IDs
-- linked test-result IDs
+POL-AI-003
 
-The model is asked to explain the change using four sections:
+Modify an authoritative trace link
 
-```text
-Change Type
+AI_RESTRICTED
 
-Semantic Impact
+AI execution remains blocked; no role can authorize it.
 
-Evidence Concern
+Governance decision flow
 
-Suggested Review
-```
+flowchart TB
+    ACT[Engineering activity requested] --> LOOK[Deterministic policy lookup]
+    LOOK --> P[AI permitted]
+    LOOK --> H[Human authorization required]
+    LOOK --> R[AI restricted]
+    P --> RUN[AI execution allowed]
+    H --> CHECK[Validate role and explicit authorization]
+    CHECK -->|Valid| RUN
+    CHECK -->|Missing or invalid| BLOCK[AI execution blocked]
+    R --> BLOCK
 
-The LLM is explicitly instructed not to:
+The LLM does not select, interpret, or modify the governance policy.
 
-- change the deterministic status
-- invent measurements
-- invent requirements
-- invent tests
-- invent traceability relationships
-- perform hazard classification
-- claim certification
-- claim ISO 26262 compliance or non-compliance
-- make authoritative safety-acceptance decisions
+Authorization outcomes
 
-AI-generated explanations remain advisory and require human engineering review.
+Outcome
 
----
+AI allowed?
 
-## 9. Example Semantic Change
+Meaning
 
-Consider the following requirement.
+PERMITTED
 
-### Previous version
+Yes
 
-```text
-If the driver seat-belt status signal is unavailable,
-the system shall report a seat-belt status fault.
-```
+Policy permits the activity without additional authorization.
 
-### Updated version
+AUTHORIZED
 
-```text
-If the driver seat-belt status signal is unavailable or implausible,
-the system shall report a seat-belt status fault and store a
-diagnostic event.
-```
+Yes
 
-The updated requirement introduces:
+An allowed role explicitly authorized the bounded activity.
 
-1. An additional condition: an **implausible** seat-belt status signal.
-2. An additional required behavior: **store a diagnostic event**.
+AUTHORIZATION_REQUIRED
 
-SafeTrace-AI identifies the linked verification evidence and recommends that it be reviewed against the expanded requirement.
+No
 
----
+The role is allowed, but explicit authorization was not granted.
 
-## 10. Streamlit Interface
+UNAUTHORIZED_ROLE
 
-SafeTrace-AI includes a Streamlit interface for interactive analysis.
+No
 
-The interface presents:
+No role was selected or the selected role is not allowed.
 
-- changed requirement count
-- requirement ID and title
-- old requirement
-- new requirement
-- deterministic evidence status
-- deterministic reason
-- linked test cases
-- linked test results
-- LLM advisory explanation
+RESTRICTED
 
-The interface also allows the LLM explanation layer to be enabled or disabled.
+No
 
-This makes it possible to run the deterministic pipeline independently of Ollama.
+Policy prohibits AI execution for the activity.
 
----
+AI_NOT_REQUESTED
 
-## 11. Project Structure
+No
 
-```text
+Analysis was intentionally run without the LLM.
+
+8. Human authorization
+
+For a safety-requirement impact explanation, the current policy permits explicit authorization by configured engineering roles such as:
+
+requirements_engineer
+
+verification_engineer
+
+safety_engineer
+
+Authorization requires both:
+
+Selection of an allowed role.
+
+An explicit authorization action in the governance interface.
+
+Selecting a role without explicit authorization is insufficient. Explicit authorization by an unauthorized role is also insufficient. A restricted activity remains restricted regardless of role or checkbox state.
+
+This is a technical role-policy demonstrator. It does not yet authenticate a real organizational identity or persist a signed approval record.
+
+9. Advisory LLM layer
+
+SafeTrace-AI currently uses:
+
+Ollama endpoint: http://localhost:11434/api/generate
+Model: llama3.2:3b
+
+The LLM receives verified information including:
+
+old and new requirement text
+
+deterministic evidence status
+
+deterministic reason
+
+linked test-case IDs
+
+linked test-result IDs
+
+The requested response uses four headings:
+
+Change Type:
+Semantic Impact:
+Evidence Concern:
+Suggested Review:
+
+The prompt instructs the model to preserve numbers and logical operators and prohibits it from inventing requirements, measurements, tests, trace links, regulations, certification, or compliance conclusions.
+
+These prompt constraints reduce risk but do not constitute deterministic output validation. Generated text remains advisory and subject to human engineering review.
+
+10. Data model and case study
+
+The case study contains two versions of six seat-belt warning requirements, six test cases, and six historical test results.
+
+Requirement
+
+Version 1
+
+Version 2
+
+Current deterministic finding
+
+SSR-001
+
+Activation above 10 km/h
+
+Activation above 5 km/h
+
+REVIEW_REQUIRED
+
+SSR-002
+
+Activate within 500 ms
+
+Activate within 200 ms
+
+RE_VERIFICATION_REQUIRED
+
+SSR-003
+
+Unavailable signal produces fault
+
+Unavailable or implausible signal produces fault and diagnostic event
+
+REVIEW_REQUIRED
+
+SSR-004
+
+Fastened belt deactivates warning
+
+Fastened belt and valid signal deactivate warning
+
+REVIEW_REQUIRED
+
+SSR-005
+
+Visual warning indication
+
+Unchanged
+
+Not analyzed downstream
+
+SSR-006
+
+Restart-state determination
+
+Unchanged
+
+Not analyzed downstream
+
+Historical test results remain associated with requirement version 1. A prior pass verdict is not reinterpreted as proof that the updated requirement is satisfied.
+
+11. Streamlit interface
+
+The application is a Streamlit multipage interface.
+
+Analysis page
+
+Runs deterministic change-impact analysis.
+
+Optionally requests Ollama explanations.
+
+Shows old and new requirement text.
+
+Shows deterministic status and reason.
+
+Shows linked test cases and test results.
+
+Shows the advisory explanation when governance allows execution.
+
+Provides a downloadable text report.
+
+Governance page
+
+Displays the machine-readable policy overview.
+
+Allows selection of an engineering activity.
+
+Displays the applicable policy and allowed roles.
+
+Demonstrates role selection and explicit authorization.
+
+Displays whether AI execution is permitted, authorized, blocked, or restricted.
+
+Does not call Ollama; it demonstrates the pre-execution decision logic.
+
+12. Repository structure
+
 safe-trace-ai/
-|
-+-- data/
-|   |
-|   +-- case_study/
-|       |
-|       +-- requirements_v1.yaml
-|       +-- requirements_v2.yaml
-|       +-- test_cases.yaml
-|       +-- test_results.yaml
-|
-+-- src/
-|   |
-|   +-- data_loader.py
-|   +-- change_detector.py
-|   +-- traceability.py
-|   +-- impact_analyzer.py
-|   +-- evidence_assessor.py
-|   +-- llm_analyzer.py
-|   +-- main.py
-|   +-- app.py
-|
-+-- tests/
-|   |
-|   +-- test_change_detector.py
-|   +-- test_evidence_assessor.py
-|   +-- test_llm_analyzer.py
-|   +-- test_traceability.py
-|
-+-- requirements.txt
-+-- README.md
-```
+├── config/
+│   └── governance_policies.yaml
+├── data/
+│   └── case_study/
+│       ├── requirements_v1.yaml
+│       ├── requirements_v2.yaml
+│       ├── test_cases.yaml
+│       └── test_results.yaml
+├── src/
+│   ├── pages/
+│   │   └── 1_Governance.py
+│   ├── app.py
+│   ├── change_detector.py
+│   ├── data_loader.py
+│   ├── evidence_assessor.py
+│   ├── governance_authorization.py
+│   ├── governance_policy.py
+│   ├── impact_analyzer.py
+│   ├── llm_analyzer.py
+│   ├── main.py
+│   ├── report_generator.py
+│   └── traceability.py
+├── tests/
+│   ├── test_change_detector.py
+│   ├── test_evidence_assessor.py
+│   ├── test_governance_authorization.py
+│   ├── test_governance_policy.py
+│   ├── test_governed_analysis.py
+│   ├── test_llm_analyzer.py
+│   └── test_traceability.py
+├── requirements.txt
+└── README.md
 
----
+13. Installation
 
-## 12. Module Responsibilities
+Prerequisites
 
-### `data_loader.py`
+Python 3
 
-Loads YAML engineering data into Python data structures.
+Git
 
----
+Ollama, only for LLM-enabled analysis
 
-### `change_detector.py`
+The local llama3.2:3b model, only for LLM-enabled analysis
 
-Compares requirement versions and identifies modified and unchanged requirements.
+Clone and install
 
----
-
-### `traceability.py`
-
-Resolves traceability relationships between:
-
-```text
-Requirement -> Test Case -> Test Result
-```
-
----
-
-### `impact_analyzer.py`
-
-Determines which verification evidence is associated with changed requirements.
-
----
-
-### `evidence_assessor.py`
-
-Applies deterministic engineering rules to determine evidence-review status.
-
----
-
-### `llm_analyzer.py`
-
-Builds a grounded prompt from verified deterministic facts and communicates with the local Ollama model.
-
-The resulting explanation is advisory.
-
----
-
-### `main.py`
-
-Acts as the application orchestrator.
-
-It coordinates the complete analysis pipeline and returns structured results that can be consumed by both the command-line interface and Streamlit.
-
----
-
-### `app.py`
-
-Provides the Streamlit user interface.
-
-It calls the same analysis pipeline used by the command-line application rather than duplicating engineering logic.
-
----
-
-## 13. Installation
-
-Clone the repository:
-
-```bash
-git clone <repository-url>
+git clone https://github.com/saima-imran/safe-trace-ai.git
 cd safe-trace-ai
-```
-
-Create a virtual environment:
-
-### Windows PowerShell
-
-```powershell
 python -m venv .venv
-```
-
-Activate it:
-
-```powershell
 .venv\Scripts\Activate.ps1
-```
-
-Install dependencies:
-
-```powershell
 pip install -r requirements.txt
-```
 
----
+Check the local Ollama installation and model:
 
-## 14. Ollama Setup
-
-SafeTrace-AI currently uses Ollama for local LLM inference.
-
-Check that Ollama is installed:
-
-```powershell
 ollama --version
-```
-
-Check installed models:
-
-```powershell
 ollama list
-```
 
-The current prototype expects:
+If the model is not installed:
 
-```text
-llama3.2:3b
-```
+ollama pull llama3.2:3b
 
-If necessary, obtain the model through Ollama before running LLM-enabled analysis.
+14. Running the project
 
-Ollama should be available locally at:
+Run the Streamlit application
 
-```text
-http://localhost:11434
-```
+From the repository root:
 
----
-
-## 15. Running the Command-Line Analysis
-
-From the project root:
-
-```powershell
-python src/main.py
-```
-
-The command-line application executes:
-
-```text
-Load engineering data
-        |
-        v
-Detect requirement changes
-        |
-        v
-Resolve traceability
-        |
-        v
-Analyze verification impact
-        |
-        v
-Assess evidence deterministically
-        |
-        v
-Generate advisory LLM explanation
-        |
-        v
-Display combined analysis
-```
-
----
-
-## 16. Running the Streamlit Application
-
-Start the Streamlit application from the project root:
-
-```powershell
 streamlit run src/app.py
-```
 
-Streamlit normally opens the application in the browser at:
+Open http://localhost:8501 if the browser does not open automatically. Stop the server with Ctrl+C in the terminal.
 
-```text
-http://localhost:8501
-```
+Run deterministic analysis without Ollama
 
-Use the sidebar to choose whether Ollama explanations should be generated.
+Use the Streamlit checkbox to disable Ollama explanations before running the analysis. This preserves deterministic change, traceability, impact, and evidence analysis without local model execution.
 
-Then select:
+Ollama performance note
 
-```text
-Run SafeTrace-AI Analysis
-```
+The configured 3-billion-parameter model may use 100% CPU while generating a response on CPU-only hardware. A request can take time because each changed requirement can produce a separate model call.
 
-To stop Streamlit, return to the terminal and press:
+Useful commands:
 
-```text
-Ctrl + C
-```
+ollama ps
+ollama stop llama3.2:3b
 
----
+15. Testing
 
-## 17. Automated Testing
+Run all automated tests from the repository root:
 
-The project uses pytest.
-
-Run the complete test suite:
-
-```powershell
 pytest -v
-```
 
-The current prototype includes tests for:
+Documented baseline:
 
-- requirement change detection
-- deterministic evidence assessment
-- requirement/test/result traceability
-- LLM prompt construction
-- Ollama response handling
-- empty LLM response handling
+19 passed
 
-The LLM integration tests mock the HTTP response and therefore do not require the real language model to generate a response during unit testing.
+The tests cover:
 
-At the current development milestone:
+requirement change detection
 
-```text
-6 tests passed
-```
+deterministic timing evidence assessment
 
----
+requirement-to-test-to-result traceability
 
-## 18. Deterministic vs Generative Responsibilities
+grounded prompt construction
 
-A central architectural boundary in SafeTrace-AI is:
+mocked Ollama response and empty-response handling
 
-```text
-DETERMINISTIC PYTHON
-        |
-        +-- Detect changes
-        +-- Resolve traceability
-        +-- Analyze evidence
-        +-- Assign evidence status
-        |
-        v
-AUTHORITATIVE ENGINEERING FINDING
-        |
-        v
-LOCAL LLM
-        |
-        +-- Explain the change
-        +-- Explain evidence concern
-        +-- Suggest items for human review
-        |
-        v
-ADVISORY EXPLANATION
-```
+governance policy loading and validation
 
-The LLM is not the authority for verification status.
+permitted, authorization-required, authorized, unauthorized, and restricted outcomes
 
-This separation reduces the risk of using generative output as an uncontrolled engineering decision.
+enforcement of governance before LLM execution
 
----
+Automated LLM adapter tests mock the HTTP response and therefore do not require a real generation call.
 
-## 19. Current Limitations
+16. Demonstration scenarios
 
-SafeTrace-AI is a research prototype and has several limitations.
+Scenario A: AI permitted
 
-### Small case-study dataset
+Select the low-consequence summarization activity. POL-AI-001 produces PERMITTED, and AI execution is allowed without additional authorization.
 
-The current demonstration uses a small seat-belt warning requirement set.
+Scenario B: Human authorization required
 
-### Rule-based deterministic assessment
+Select the safety-impact explanation activity without an allowed role and explicit authorization. POL-AI-002 blocks execution. Select an allowed role and explicitly authorize bounded assistance; the result becomes AUTHORIZED.
 
-Only a limited number of evidence-assessment rules are currently implemented.
+Scenario C: Restricted traceability core
 
-### LLM output variability
+Select authoritative trace-link modification. POL-AI-003 returns RESTRICTED, even if an engineering role is selected and explicit authorization is checked.
 
-Even with a strongly constrained prompt and low temperature, a language model can occasionally introduce wording or interpretations that are not explicitly supported by the engineering evidence.
+17. Current limitations
 
-For this reason, generated explanations are advisory and require human review.
+The case study is intentionally small and synthetic.
 
-### Local model capability
+Only modified requirements are currently processed by the downstream impact pipeline.
 
-The current prototype uses `llama3.2:3b`, which provides a lightweight local inference solution but has more limited reasoning and instruction-following capability than larger models.
+Timing is the only specialized deterministic evidence rule.
 
-### No production lifecycle integration
+YAML input data has no complete schema validation, signatures, or provenance protection.
 
-The prototype does not currently integrate directly with industrial lifecycle-management platforms or requirements-management tools.
+Governance selection is activity-based and does not yet include artifact criticality, lifecycle state, risk classification, or organizational context.
 
----
+Roles are interface selections rather than authenticated identities.
 
-## 20. Future Work
+Human authorization is evaluated in memory and is not persistently logged.
 
-Possible future extensions include:
+Prompt restrictions are not yet backed by deterministic output validation.
 
-### LLM Output Validation
+LLM output quality depends on the local model and remains variable.
 
-Introduce a post-generation validation layer that checks LLM explanations for:
+Proposed AI output and trusted engineering state are not yet persisted separately.
 
-- unsupported claims
-- prohibited compliance language
-- certification claims
-- changed numerical values
-- altered logical operators
-- invented evidence
-- invented traceability relationships
+Trusted-state recovery and rollback are not implemented.
 
-Conceptually:
+The prototype has no direct integration with industrial requirements or evidence-management platforms.
 
-```text
-Deterministic Finding
-        |
-        v
-LLM Explanation
-        |
-        v
-Output Validator
-        |
-        +-- acceptable -> present to engineer
-        |
-        +-- issue detected -> flag for review
-```
+18. Accountability and recovery roadmap
 
-### Expanded Deterministic Rules
+The implemented governance layer establishes pre-execution AI-use boundaries. The next research steps address organizational accountability and recovery:
 
-Additional deterministic assessment rules could support more requirement-change categories.
+flowchart LR
+    I[Implemented policy gate] --> L[Persistent accountability log]
+    L --> W[Human review workflow]
+    W --> V[Deterministic output validator]
+    V --> S[Proposed versus trusted state]
+    S --> R[Recovery demonstrator]
 
-### Larger Case Studies
+Planned capabilities include:
 
-The prototype could be evaluated using larger and more complex requirement baselines.
+Persistent accountability log — record policy ID and version, role, decision, authorization, model, timestamps, input references, and justification.
 
-### Requirements-Management Integration
+Human review workflow — record approve, reject, or escalate decisions with reviewer responsibility.
 
-Future implementations could investigate integration with engineering lifecycle-management platforms such as SystemWeaver or similar tools.
+Deterministic output validator — detect changed numbers, altered logical operators, unsupported claims, invented evidence, and prohibited compliance language.
 
-### Report Generation
+Proposed versus trusted state — keep AI suggestions separate from approved engineering artifacts.
 
-Analysis results could be exported into structured engineering change-impact reports.
+Recovery demonstrator — inject a faulty advisory output, identify affected downstream artifacts, restore the last trusted state, and document re-review.
 
-### LLM Evaluation
+Empirical evaluation — evaluate usefulness, false claims, authorization burden, accountability completeness, and recovery effectiveness with practitioners.
 
-Future research could systematically evaluate:
+19. Research scope
 
-- factual grounding
-- semantic accuracy
-- hallucination rate
-- logical-operator preservation
-- numerical-value preservation
-- usefulness to verification engineers
+SafeTrace-AI investigates the following central question:
 
----
+How can organizations define and operationalize boundaries for AI-assisted traceability while maintaining accountability and enabling recovery?
 
-## 21. Research Scope
+The current baseline demonstrates that AI-use boundaries can be represented as deterministic, machine-readable policies and enforced before model execution. It does not yet demonstrate complete organizational accountability or recovery. Those capabilities are explicit next-stage research work.
 
-SafeTrace-AI investigates how generative AI can support requirement-change analysis while keeping authoritative engineering decisions within a deterministic and auditable pipeline.
+Potential evaluation areas include:
 
-The project does **not** attempt to replace:
+taxonomy of AI-use boundaries in traceability
 
-- requirements engineers
-- verification engineers
-- safety engineers
-- formal verification
-- engineering review
-- safety assessment
-- certification processes
+policy expressiveness and usability
 
-Instead, the LLM acts as an explanation and review-support component around deterministic engineering evidence.
+practitioner interpretation of authorization decisions
 
----
+completeness of accountability and provenance records
 
-## 22. Disclaimer
+factual and semantic validation of advisory output
 
-SafeTrace-AI is a research and demonstration prototype.
+detection and recovery after deliberately injected failures
 
-It is **not an ISO 26262 compliance tool**, certification tool, production safety-analysis tool, or replacement for qualified engineering judgement.
+comparison of deterministic-only and policy-governed AI-assisted workflows
+
+20. Disclaimer
+
+SafeTrace-AI is a research and demonstration prototype. It is not an ISO 26262 compliance tool, certification tool, production safety-analysis tool, or replacement for qualified engineering judgment.
 
 All AI-generated explanations are advisory and require human engineering review.
